@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>WP REST API jQuery - Example Hello World</title>
+		<style type="text/css">
+		</style>
+
+	</head>
+	<body>
+
+	<div class="app">Loading Post...</div>
+
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" type="text/javascript"></script>
+	<script src="wp-rest-api-jquery.js" type="text/javascript"></script>
+
+	<script type="text/javascript">
+	$(document).ready( function() {
+
+		var site_url = ""; // Enter your WP site url here.
+
+		var post_slug = "hello-world";
+
+		var post = restjQuery({
+			site_url: site_url,
+			endpoint: "posts?slug=" + post_slug
+		});
+
+		// Check if data returned before displaying post.
+		if ( post !== 'undefined' && post.length > 0 ) {
+
+			$(".app").html('<div class="post"></div>');
+
+			var template = '<article id="entry-' + post[0]["id"] + '" class="entry post-type-' + post[0]["type"] + ' post-format-' + post[0]["format"] + '"><h1 class="entry-title"></h1><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><div class="post-content"></div></article>';
+
+			$(".post").append( template ).promise().done( function() {
+
+				var post_title      = $('article').find("h1.entry-title");
+				var post_image      = $('article').find("div.entry-image img");
+				var post_content    = $('article').find("div.post-content");
+				var post_date       = $('article').find("span.date");
+				var post_categories = $('article').find("span.categories");
+				var post_tags       = $('article').find("span.tags");
+
+				$(post_title).html( post[0]["title"]["rendered"] );
+				$(post_content).html( post[0]["content"]["rendered"] );
+				$(post_date).html( post[0]["date"] );
+
+				if ( post[0]["featured_media"] > 0 ) {
+					var featured_media = restjQuery({
+						endpoint: "media/" + post[0]["featured_media"]
+					});
+
+					$(post_image).attr( "src", featured_media.guid.rendered );
+					$(post_image).attr( "width", 500 );
+					$(post_image).attr( "height", 340 );
+				}
+
+			});
+
+		}
+
+	});
+	</script>
+
+	</body>
+</html>

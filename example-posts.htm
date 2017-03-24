@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>WP REST API jQuery - Example Posts</title>
+		<style type="text/css">
+		</style>
+
+	</head>
+	<body>
+
+	<div class="app">Loading Posts...</div>
+
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" type="text/javascript"></script>
+	<script src="wp-rest-api-jquery.js" type="text/javascript"></script>
+
+	<script type="text/javascript">
+	$(document).ready( function() {
+
+		var site_url = ""; // Enter your WP site url here.
+
+		var page_number = 1;
+		var per_page    = 5;
+		var entry_key   = 1;
+
+		load_posts( per_page, page_number ); // Load the first 5 posts.
+
+		$('.posts').after('<a class="load-more" href="#">Load More Posts</a>');
+
+		$('a.load-more').on( 'click', function(e) {
+			e.preventDefault();
+			load_posts( per_page, page_number ); // Load the next 5 posts.
+		});
+
+		function load_posts( $per_page, $page_number ) {
+			var posts = restjQuery({
+				site_url: site_url,
+				endpoint: "posts?per_page=" + $per_page + "&page=" + $page_number
+			});
+
+			// Check if data returned before displaying posts.
+			if ( posts !== 'undefined' && posts.length > 0 ) {
+
+				if ( page_number == 1 ) {
+					$(".app").html('<div class="posts"></div>');
+				}
+
+				var template = {};
+
+				$.each(posts, function(key, value) {
+
+					if ( value["featured_media"] > 0 ) {
+						var featured_media = restjQuery({
+							endpoint: "media/" + value["featured_media"]
+						});
+					}
+
+					template[value] = '<article id="entry-' + entry_key + '" class="entry post-type-' + value["type"] + ' post-format-' + value["format"] + '"><h2 class="entry-title"></h2><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><p class="excerpt"></p><a class="view-post" href="#">Read More ></a></article>';
+
+					$(".posts").append( template[value] ).promise().done( function() {
+
+						var post_title      = $('article#entry-' + entry_key).find("h2.entry-title");
+						var post_image      = $('article#entry-' + entry_key).find("div.entry-image img");
+						var post_date       = $('article#entry-' + entry_key).find("span.date");
+						var post_categories = $('article#entry-' + entry_key).find("span.categories");
+						var post_tags       = $('article#entry-' + entry_key).find("span.tags");
+						var post_excerpt    = $('article#entry-' + entry_key).find("p.excerpt");
+						var post_link       = $('article#entry-' + entry_key).find("a");
+
+						$(post_title).html( value["title"]["rendered"] );
+
+						if ( value["featured_media"] > 0 ) {
+							$(post_image).attr( "src", featured_media.guid.rendered );
+							$(post_image).attr( "width", 500 );
+							$(post_image).attr( "height", 340 );
+						}
+
+						$(post_date).html( value["date"] );
+						//$(post_categories).html( value["categories"] );
+						//$(post_tags).html( value["tags"] );
+
+						//$(post_excerpt).replaceWith( value["content"]["rendered"]);
+						$(post_excerpt).replaceWith( value["excerpt"]["rendered"]);
+						$(post_link).attr( "href", value["link"] );
+
+						entry_key = entry_key+1;
+
+					});
+
+				});
+
+				page_number = page_number+1;
+
+			}
+			else {
+				$('a.load-more').fadeOut('fast', function() {
+					$(this).remove();
+				});
+			}
+
+		} // END load_posts()
+
+	});
+	</script>
+
+	</body>
+</html>
