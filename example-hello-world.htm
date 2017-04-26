@@ -3,15 +3,45 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>WP REST API jQuery - Example Hello World</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta http-equiv="cleartype" content="on" />
+
+		<link href='base.css' type='text/css' rel='stylesheet' />
 		<style type="text/css">
+		.to-do {
+			background-color: #eee;
+			padding: 0.2em 1em;
+		}
+
+		.app {
+			margin: 0 auto;
+			width: 500px;
+		}
 		</style>
 
 	</head>
 	<body>
 
+	<div class="to-do">
+		<h3>To Do</h3>
+		<ul>
+			<li>
+				Convert Date and Timestamp to Human readable.
+			</li>
+			<li>
+				Complete Post Categories and Tags.
+			</li>
+			<li>
+				Display Comments for Post.
+			</li>
+		</ul>
+	</div>
+
 	<div class="app">Loading Post...</div>
 
-	<script src="https://code.jquery.com/jquery-3.1.1.min.js" type="text/javascript"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="wp-rest-api-jquery.js" type="text/javascript"></script>
 
 	<script type="text/javascript">
@@ -27,11 +57,30 @@
 		});
 
 		// Check if data returned before displaying post.
-		if ( post !== 'undefined' && post.length > 0 ) {
+		if ( post !== undefined && post.length > 0 ) {
+
+			// Apply body classes.
+			$('body').addClass('post-id-' + post[0]["id"]);
+
+			if ( post[0]["type"] !== undefined || post[0]["type"] !== '' ) {
+				$('body').addClass('post-type-' + post[0]["type"]);
+			}
+
+			if ( post[0]["format"] !== undefined || post[0]["format"] !== '' ) {
+				$('body').addClass('post-format-' + post[0]["format"]);
+			}
+
+			if ( post[0]["comment_status"] !== undefined ) {
+				$('body').addClass('comment-status-' + post[0]["comment_status"]);
+			}
+
+			if ( post[0]["sticky"] ) {
+				$('body').addClass('is-sticky');
+			}
 
 			$(".app").html('<div class="post"></div>');
 
-			var template = '<article id="entry-' + post[0]["id"] + '" class="entry post-type-' + post[0]["type"] + ' post-format-' + post[0]["format"] + '"><h1 class="entry-title"></h1><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><div class="post-content"></div></article>';
+			var template = '<article class="entry"><h1 class="entry-title"></h1><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><div class="post-content"></div></article>';
 
 			$(".post").append( template ).promise().done( function() {
 
@@ -39,21 +88,27 @@
 				var post_image      = $('article').find("div.entry-image img");
 				var post_content    = $('article').find("div.post-content");
 				var post_date       = $('article').find("span.date");
-				var post_categories = $('article').find("span.categories");
-				var post_tags       = $('article').find("span.tags");
+				//var post_categories = $('article').find("span.categories");
+				//var post_tags       = $('article').find("span.tags");
 
 				$(post_title).html( post[0]["title"]["rendered"] );
 				$(post_content).html( post[0]["content"]["rendered"] );
 				$(post_date).html( post[0]["date"] );
 
+				// Look for featured image after content has been applied. AKA Lazy Load
 				if ( post[0]["featured_media"] > 0 ) {
 					var featured_media = restjQuery({
 						endpoint: "media/" + post[0]["featured_media"]
 					});
 
-					$(post_image).attr( "src", featured_media.guid.rendered );
-					$(post_image).attr( "width", 500 );
-					$(post_image).attr( "height", 340 );
+					$(post_image).attr({
+						src: featured_media.guid.rendered,
+						width: 500,
+						height: 340
+					});
+				}
+				else {
+					$("div.entry-image").remove();
 				}
 
 			});
