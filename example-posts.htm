@@ -3,21 +3,82 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>WP REST API jQuery - Example Posts</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta http-equiv="cleartype" content="on" />
+
+		<link href='base.css' type='text/css' rel='stylesheet' />
 		<style type="text/css">
+		.to-do {
+			background-color: #eee;
+			padding: 0.2em 1em;
+		}
+
+		.app {
+			margin: 0 auto;
+			width: 500px;
+		}
+
+		.button {
+			background-color: #4073bf;
+			border: none;
+			border-bottom: 4px solid #264573;
+			border-radius: 4px;
+			padding: 0.5em 1em;
+			color: #fff!important;
+			font-weight: bold;
+			font-size: 1em;
+			display: inline-block;
+			text-decoration: none!important;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			appearance: none;
+		}
+
+		.button:hover {
+			text-decoration: none;
+			border-bottom: 5px solid #264573;
+			transform: translateY(-1px);
+			margin-bottom: -1px;
+		}
+
+		.button:active {
+			text-decoration: none;
+			border-bottom: 3px solid #D7493A;
+			transform: translateY(1px);
+			margin-bottom: 1px;
+		}
+
+		.posts {
+			margin-bottom: 2em;
+			padding-bottom: 2em;
+			border-bottom: 1em #666 solid;
+		}
 		</style>
 
 	</head>
 	<body>
 
+	<div class="to-do">
+		<h3>To Do</h3>
+		<ul>
+			<li>
+				Convert Date and Timestamp to Human readable.
+			</li>
+			<li>
+				Complete Post Categories and Tags.
+			</li>
+		</ul>
+	</div>
+
 	<div class="app">Loading Posts...</div>
 
-	<script src="https://code.jquery.com/jquery-3.1.1.min.js" type="text/javascript"></script>
-	<script src="wp-rest-api-jquery.js" type="text/javascript"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="wp-rest-api-jquery.min.js" type="text/javascript"></script>
 
 	<script type="text/javascript">
 	$(document).ready( function() {
-
-		var site_url = ""; // Enter your WP site url here.
 
 		var page_number = 1;
 		var per_page    = 5;
@@ -25,7 +86,7 @@
 
 		load_posts( per_page, page_number ); // Load the first 5 posts.
 
-		$('.posts').after('<a class="load-more" href="#">Load More Posts</a>');
+		$('.posts').after('<a class="load-more button" href="#">Load More Posts</a>');
 
 		$('a.load-more').on( 'click', function(e) {
 			e.preventDefault();
@@ -34,12 +95,11 @@
 
 		function load_posts( $per_page, $page_number ) {
 			var posts = restjQuery({
-				site_url: site_url,
 				endpoint: "posts?per_page=" + $per_page + "&page=" + $page_number
 			});
 
 			// Check if data returned before displaying posts.
-			if ( posts !== 'undefined' && posts.length > 0 ) {
+			if ( posts !== undefined && posts.length > 0 ) {
 
 				if ( page_number == 1 ) {
 					$(".app").html('<div class="posts"></div>');
@@ -49,37 +109,50 @@
 
 				$.each(posts, function(key, value) {
 
-					if ( value["featured_media"] > 0 ) {
-						var featured_media = restjQuery({
-							endpoint: "media/" + value["featured_media"]
-						});
-					}
-
-					template[value] = '<article id="entry-' + entry_key + '" class="entry post-type-' + value["type"] + ' post-format-' + value["format"] + '"><h2 class="entry-title"></h2><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><p class="excerpt"></p><a class="view-post" href="#">Read More ></a></article>';
+					template[value] = '<article id="entry-' + entry_key + '" class="entry"><h2 class="entry-title"></h2><div class="entry-image"><img /></div><div class="entry-meta"></div><span class="date"></span><p class="excerpt"></p><a class="view-post button" href="#">Read More ></a></article>';
 
 					$(".posts").append( template[value] ).promise().done( function() {
+
+						// Apply classes to apply CSS for this page.
+						if ( value["type"] !== undefined || value["type"] !== '' ) {
+							$('article').addClass('post-type-' + value["type"]);
+						}
+
+						if ( value["format"] !== undefined || value["format"] !== '' ) {
+							$('article').addClass('post-format-' + value["format"]);
+						}
 
 						var post_title      = $('article#entry-' + entry_key).find("h2.entry-title");
 						var post_image      = $('article#entry-' + entry_key).find("div.entry-image img");
 						var post_date       = $('article#entry-' + entry_key).find("span.date");
-						var post_categories = $('article#entry-' + entry_key).find("span.categories");
-						var post_tags       = $('article#entry-' + entry_key).find("span.tags");
+						//var post_categories = $('article#entry-' + entry_key).find("span.categories");
+						//var post_tags       = $('article#entry-' + entry_key).find("span.tags");
 						var post_excerpt    = $('article#entry-' + entry_key).find("p.excerpt");
 						var post_link       = $('article#entry-' + entry_key).find("a");
 
 						$(post_title).html( value["title"]["rendered"] );
 
+						// Look for featured image after content has been applied. AKA Lazy Load
 						if ( value["featured_media"] > 0 ) {
-							$(post_image).attr( "src", featured_media.guid.rendered );
-							$(post_image).attr( "width", 500 );
-							$(post_image).attr( "height", 340 );
+							var featured_media = restjQuery({
+								endpoint: "media/" + value["featured_media"]
+							});
+
+							$(post_image).attr({
+								src: featured_media.guid.rendered,
+								width: 500,
+								height: 340
+							});
+						}
+						else {
+							$("div.entry-image").remove();
 						}
 
 						$(post_date).html( value["date"] );
 						//$(post_categories).html( value["categories"] );
 						//$(post_tags).html( value["tags"] );
 
-						$(post_excerpt).replaceWith( value["excerpt"]["rendered"]);
+						$(post_excerpt).replaceWith( value["excerpt"]["rendered"] );
 						$(post_link).attr( "href", value["link"] );
 
 						entry_key = entry_key+1;
