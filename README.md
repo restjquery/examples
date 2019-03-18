@@ -1,6 +1,6 @@
-# WordPress REST API jQuery Examples
+# RESTjQuery Examples
 
-This repository provides examples on how to use the [restjQuery()](https://github.com/seb86/WordPress-REST-API-jQuery) script. Each example also provides javascript ready made for you to copy and paste into your projects.
+This repository provides examples on how to use the [restjQuery](https://github.com/restjquery/RESTjQuery) script. Each example also provides javascript ready made for you to copy and paste into your projects.
 
 These examples show how to use the script parameters, apply body classes based on the post content, only load content elements that exists and lazy load the featured image if one has been assigned to the post.
 
